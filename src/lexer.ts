@@ -44,8 +44,6 @@ export class Lexer {
   }
 
   next(): Token {
-    if (this.isAtEnd()) return this.makeToken(TokenType.EOF);
-
     while (
       this.cc == "\n" ||
       this.cc == "\t" ||
@@ -58,6 +56,8 @@ export class Lexer {
       }
       this.advance();
     }
+
+    if (this.isAtEnd()) return this.makeToken(TokenType.EOF);
 
     let type = TokenType.UNKNOWN;
     switch (this.cc) {
@@ -124,8 +124,29 @@ export class Lexer {
     };
   }
 
+  // TODO: support \\, \", \n, \r, \t, \/, \b
   private string(): Token {
-    throw new Error("Not implemented");
+    // skip "
+    this.advance();
+
+    let start = this.column;
+
+    for (; !this.isAtEnd() && this.cc != '"'; this.advance()) {}
+
+    if (this.cc != '"') {
+      // TODO: fancy error handling
+      throw new Error("Unterminated string");
+    }
+
+    // skip "
+    this.advance();
+
+    return {
+      type: TokenType.STRING,
+      column: this.column - start,
+      raw: this.input.slice(start, this.column - 1),
+      line: this.line,
+    };
   }
 
   private number(): Token {
@@ -148,6 +169,6 @@ export class Lexer {
   }
 
   private isAtEnd(): boolean {
-    return this.pos >= this.input.length || -this.cc == 0;
+    return this.pos >= this.input.length;
   }
 }

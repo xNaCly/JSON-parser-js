@@ -41,3 +41,19 @@ test("keywords", () => {
     expect(l.next().type).toBe(expected[i]);
   }
 });
+
+test("string", () => {
+  let inputs = ['"this is a string"'];
+  let expected = [
+    {
+      type: TokenType.STRING,
+      val: "this is a string",
+    },
+  ];
+  for (let i = 0; i < inputs.length; i++) {
+    let l = new Lexer(inputs[i]);
+    let tok = l.next();
+    expect(tok.type).toBe(expected[i].type);
+    expect(tok.raw).toBe(expected[i].val);
+  }
+});
