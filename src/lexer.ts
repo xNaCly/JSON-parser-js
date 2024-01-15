@@ -36,13 +36,15 @@ export class Lexer {
   private pos: number;
   private cc: string;
 
-  lex(input: string): Token[] {
+  constructor(input: string) {
     this.input = input;
     this.column = 0;
     this.line = 0;
     this.pos = 0;
     this.cc = input.charAt(this.pos);
+  }
 
+  lex(): Token[] {
     let tokens: Token[] = [];
 
     for (; this.cc != ""; ) {
@@ -72,6 +74,7 @@ export class Lexer {
       }
 
       tokens.push(this.makeToken(type, this.cc));
+      this.advance();
     }
 
     tokens.push(this.makeToken(TokenType.EOF, "EOF"));
