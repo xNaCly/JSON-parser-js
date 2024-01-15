@@ -19,7 +19,7 @@ export enum TokenType {
   COMMA,
 }
 
-// TODO: values: string, number
+// TODO: values: string
 
 export interface Token {
   line: number;
@@ -124,7 +124,6 @@ export class Lexer {
     };
   }
 
-  // TODO: support \\, \", \n, \r, \t, \/, \b
   private string(): Token {
     // skip "
     this.advance();
