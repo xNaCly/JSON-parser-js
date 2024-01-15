@@ -1,6 +1,6 @@
 // Tokenizing elements contained in the JSON spec: https://www.json.org/json-en.html
 
-enum TokenType {
+export enum TokenType {
   UNKNOWN,
   EOF,
 
@@ -19,13 +19,12 @@ enum TokenType {
   COMMA,
 }
 
-// TODO: values: string, number, false, true, null
-// TODO: ignore comments: //
+// TODO: values: string, number
 
-interface Token {
+export interface Token {
   line: number;
   column: number;
-  raw: string;
+  raw?: string;
   type: TokenType;
 }
 
@@ -44,41 +43,85 @@ export class Lexer {
     this.cc = input.charAt(this.pos);
   }
 
-  lex(): Token[] {
-    let tokens: Token[] = [];
+  next(): Token {
+    if (this.isAtEnd()) return this.makeToken(TokenType.EOF);
 
-    for (; this.cc != ""; ) {
-      this.skipWhiteSpace();
-      let type = TokenType.UNKNOWN;
-      switch (this.cc) {
-        case "{":
-          type = TokenType.LEFT_CURLY;
-        case "}":
-          type = TokenType.RIGHT_CURLY;
-        case "[":
-          type = TokenType.LEFT_BRAKET;
-        case "]":
-          type = TokenType.RIGHT_BRAKET;
-        case ":":
-          type = TokenType.COLON;
-        case ",":
-          type = TokenType.COMMA;
-        case '"':
-          tokens.push(this.string());
-          continue;
-        default:
-          if (this.cc == "-" || (this.cc <= "0" && this.cc >= "9")) {
-            tokens.push(this.number());
-            continue;
-          }
+    while (
+      this.cc == "\n" ||
+      this.cc == "\t" ||
+      this.cc == " " ||
+      this.cc == "\r"
+    ) {
+      if (this.cc == "\n") {
+        this.line++;
+        this.column = 0;
       }
-
-      tokens.push(this.makeToken(type, this.cc));
       this.advance();
     }
 
-    tokens.push(this.makeToken(TokenType.EOF, "EOF"));
-    return tokens;
+    let type = TokenType.UNKNOWN;
+    switch (this.cc) {
+      case "{":
+        type = TokenType.LEFT_CURLY;
+        break;
+      case "}":
+        type = TokenType.RIGHT_CURLY;
+        break;
+      case "[":
+        type = TokenType.LEFT_BRAKET;
+        break;
+      case "]":
+        type = TokenType.RIGHT_BRAKET;
+        break;
+      case ":":
+        type = TokenType.COLON;
+        break;
+      case ",":
+        type = TokenType.COMMA;
+        break;
+      case '"':
+        return this.string();
+      case "n":
+      case "t":
+      case "f":
+        return this.keyword();
+      default:
+        if (this.cc == "-" || (this.cc <= "0" && this.cc >= "9")) {
+          return this.number();
+        } else {
+          throw new Error(`Unknown character ${this.cc}`);
+        }
+    }
+
+    let cc = this.cc;
+    this.advance();
+    return this.makeToken(type, cc);
+  }
+
+  private keyword(): Token {
+    let tt = TokenType.UNKNOWN;
+    let start = this.column;
+
+    while (!this.isAtEnd()) {
+      this.advance();
+    }
+
+    switch (this.input.slice(start, this.column)) {
+      case "true":
+        tt = TokenType.TRUE;
+        break;
+      case "false":
+        tt = TokenType.FALSE;
+        break;
+      default:
+        tt = TokenType.NULL;
+    }
+
+    return {
+      type: tt,
+      column: this.column - start,
+      line: this.line,
+    };
   }
 
   private string(): Token {
@@ -98,25 +141,13 @@ export class Lexer {
     };
   }
 
-  private skipWhiteSpace() {
-    outer: for (; this.cc != ""; this.advance()) {
-      switch (this.cc) {
-        case " ":
-        case "\n":
-          this.line++;
-          this.column = 0;
-        case "\r":
-        case "\t":
-          break;
-        default:
-          break outer;
-      }
-    }
-  }
-
   private advance() {
     this.column++;
     this.pos++;
     this.cc = this.input.charAt(this.pos);
+  }
+
+  private isAtEnd(): boolean {
+    return this.pos >= this.input.length || -this.cc == 0;
   }
 }
