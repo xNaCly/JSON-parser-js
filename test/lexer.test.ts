@@ -1,18 +1,21 @@
 import { expect, test, describe } from "vitest";
 import { Lexer, TokenType } from "../src/lexer";
 
-test("whitespace", () => {
+describe("whitespace", () => {
   let inputs = [
     "   ",
     "\t\t\t\t\t\t",
     "\n\n\t\t\t\t",
     "  \n\r",
-    // TODO: ignore comments: //
+    // TODO: comments:
     // "// comment\n",
+    // "// comment\n//comment 2",
   ];
   for (const input of inputs) {
-    let l = new Lexer(input);
-    expect(l.next().type).toBe(TokenType.EOF);
+    test(input, () => {
+      let l = new Lexer(input);
+      expect(l.next().type).toBe(TokenType.EOF);
+    });
   }
 });
 
@@ -72,6 +75,40 @@ describe("string", () => {
     //   type: TokenType.STRING,
     //   val: `string with escaped \"`,
     // },
+  ];
+  for (let i = 0; i < inputs.length; i++) {
+    test(inputs[i], () => {
+      let l = new Lexer(inputs[i]);
+      let tok = l.next();
+      expect(tok.type).toBe(expected[i].type);
+      expect(tok.raw).toBe(expected[i].val);
+    });
+  }
+});
+
+describe("number", () => {
+  let inputs = ["12", "12.5", "-12.5", "-120.5e+3", "391.38E-12"];
+  let expected = [
+    {
+      type: TokenType.NUMBER,
+      val: "12",
+    },
+    {
+      type: TokenType.NUMBER,
+      val: "12.5",
+    },
+    {
+      type: TokenType.NUMBER,
+      val: "-12.5",
+    },
+    {
+      type: TokenType.NUMBER,
+      val: "-120.5e+3",
+    },
+    {
+      type: TokenType.NUMBER,
+      val: "391.38E-12",
+    },
   ];
   for (let i = 0; i < inputs.length; i++) {
     test(inputs[i], () => {

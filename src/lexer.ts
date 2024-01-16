@@ -19,8 +19,6 @@ export enum TokenType {
   COMMA,
 }
 
-// TODO: values: string
-
 export interface Token {
   line: number;
   column: number;
@@ -86,7 +84,7 @@ export class Lexer {
       case "f":
         return this.keyword();
       default:
-        if (this.cc == "-" || (this.cc <= "0" && this.cc >= "9")) {
+        if (this.cc == "-" || (this.cc >= "0" && this.cc <= "9")) {
           return this.number();
         } else {
           throw new Error(`Unknown character ${this.cc}`);
@@ -149,7 +147,25 @@ export class Lexer {
   }
 
   private number(): Token {
-    throw new Error("Not implemented");
+    let start = this.column;
+
+    while (
+      (this.cc >= "0" && this.cc <= "9") ||
+      this.cc == "." ||
+      this.cc == "E" ||
+      this.cc == "e" ||
+      this.cc == "-" ||
+      this.cc == "+"
+    ) {
+      this.advance();
+    }
+
+    return {
+      type: TokenType.NUMBER,
+      column: this.column - start,
+      raw: this.input.slice(start, this.column),
+      line: this.line,
+    };
   }
 
   private makeToken(type: TokenType, raw?: string): Token {
