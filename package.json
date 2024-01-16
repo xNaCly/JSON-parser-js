@@ -1,15 +1,32 @@
 {
   "name": "json-parser-js",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "A JSON parser written in JavaScript",
-  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/types.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "node build.mjs",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "release": "yarn build && yarn build:types && yarn test && changelogen --release --push && yarn publish",
     "test": "vitest"
   },
   "author": "Conner Luka Bachmann & xnacly",
+  "contributors": [
+    "Intevel <github@conner-bachmann.de>",
+    "xnacly"
+  ],
   "license": "MIT",
   "devDependencies": {
+    "changelogen": "^0.5.5",
     "esbuild": "^0.19.11",
     "typescript": "^5.3.3",
     "vitest": "^1.2.0"
